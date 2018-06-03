@@ -2,6 +2,7 @@ from keras import applications
 from keras.utils import np_utils
 import cifar_input
 import keras
+import os
 nas = applications.nasnet
 NASNet = nas.NASNet(input_shape=(32,32,3), penultimate_filters=48, num_blocks=2, 
                     stem_block_filters=2, classes=10)
@@ -13,9 +14,13 @@ X_test, Y_test = data_test.cifar10All()
 Y_test = np_utils.to_categorical(Y_test, num_classes=10)
 
 NASNet.compile('adam', loss='categorical_crossentropy', metrics=['accuracy'])
-NASNet.fit(x=X_train, y=Y_train, batch_size=32, epochs=10,
+
+if os.path.exists("model.h5"):
+    NASNet.load_weights("model.h5")
+
+his = NASNet.fit(x=X_train, y=Y_train, batch_size=32, epochs=30,
                   validation_data=(X_test, Y_test),
-                  callbacks=[keras.callbacks.EarlyStopping(monitor='acc'),
+                  callbacks=[keras.callbacks.EarlyStopping(monitor='val_acc'),
                              keras.callbacks.ModelCheckpoint(
                                  "model.h5", period=2),
                              keras.callbacks.TensorBoard(write_grads=True, write_images=True)])
